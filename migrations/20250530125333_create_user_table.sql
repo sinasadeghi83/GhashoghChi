@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 create table users (
-    id integer not null primary key AUTO_INCREMENT,
+    id BIGINT unsigned not null primary key AUTO_INCREMENT,
     full_name varchar(255) not null,
     phone varchar(15) not null,
     email varchar(70) unique,
@@ -12,7 +12,8 @@ create table users (
     bank_name varchar(255),
     account_number varchar(255),
     created_at datetime default CURRENT_TIMESTAMP,
-    updated_at datetime default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at datetime default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at datetime default NULL
 );
 -- +goose StatementEnd
 
