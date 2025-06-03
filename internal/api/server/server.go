@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sinasadeghi83/ghashoghchi/internal/api/v1/user"
 	"gorm.io/gorm"
 )
 
@@ -23,9 +24,10 @@ func NewServer(addr string, db *gorm.DB) *Server {
 }
 
 func (s *Server) SetupRoutes() {
-	// apiV1 := s.Engine.Group("/api/v1")
+	apiV1 := s.Engine.Group("/api/v1")
 
 	//Register modules
+	user.RegisterRoutes(apiV1.Group("/auth"), s.DB)
 
 	//Health Check
 	s.Engine.GET("/health", func(c *gin.Context) {
