@@ -73,7 +73,21 @@ func (h *Handler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to generate token"})
 	}
 
-	c.Header("tokent", token)
+	rest.RespondCreated(c, gin.H{
+		"token": token,
+		"user":  user,
+	})
+}
 
-	rest.RespondCreated(c, user)
+func (h *Handler) profile(c *gin.Context) {
+	user, e := c.Get("currentUser")
+	if !e {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Missing or invalid JWT token",
+		})
+		c.Header("WWW-Authenticate", "Bearer")
+		return
+	}
+	rest.RespondOK(c, user)
 }

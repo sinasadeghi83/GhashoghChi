@@ -13,4 +13,6 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 
 	rg.POST("/register", handler.Register)
 	rg.POST("/login", handler.Login)
+
+	rg.GET("/profile", handler.CheckAuth, handler.profile)
 }

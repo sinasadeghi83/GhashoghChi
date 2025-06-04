@@ -2,7 +2,11 @@ package user
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -11,6 +15,7 @@ var errInvalidCredentials = errors.New("invalid credentials")
 type UserService interface {
 	Register(user User) (*User, error)
 	Login(phone, password string) (*User, error)
+	Authorize(tokenString string) (*User, error)
 }
 
 type GormUserService struct {
@@ -51,4 +56,28 @@ func hashPassword(password string) (string, error) {
 func verifyPassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func (svc *GormUserService) Authorize(tokenString string) (*User, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("SECRET")), nil
+	})
+
+	if err != nil || !token.Valid {
+		return nil, errors.New("invalid or expired token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("invalid token")
+	}
+
+	if float64(time.Now().Unix()) > claims["exp"].(float64) {
+		return nil, errors.New("expired token")
+	}
+
+	return svc.repo.FindById(uint(claims["id"].(float64)))
 }
