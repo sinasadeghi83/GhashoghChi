@@ -3,7 +3,7 @@
 create table users (
     id BIGINT unsigned not null primary key AUTO_INCREMENT,
     full_name varchar(255) not null,
-    phone varchar(15) not null,
+    phone varchar(15) not null unique,
     email varchar(70) unique,
     password varchar(255) not null,
     role enum('buyer', 'seller', 'courier') not null,
