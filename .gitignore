@@ -28,3 +28,6 @@ bin
 
 #mysql data
 mysql_data
+
+#vscode folder
+.vscode

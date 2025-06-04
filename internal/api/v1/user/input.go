@@ -17,3 +17,8 @@ type BankInfo struct {
 	BankName      string `json:"bank_name"`
 	AccountNumber string `json:"account_number"`
 }
+
+type loginCredentials struct {
+	Phone    string `json:"phone" binding:"required,min=10,max=15"`
+	Password string `json:"password" binding:"required,min=4,max=255"`
+}

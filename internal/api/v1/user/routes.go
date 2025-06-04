@@ -12,4 +12,5 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	handler := NewHandler(svc)
 
 	rg.POST("/register", handler.Register)
+	rg.POST("/login", handler.Login)
 }

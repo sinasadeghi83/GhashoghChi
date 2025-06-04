@@ -15,7 +15,7 @@ type User struct {
 	FullName           string   `gorm:"full_name" json:"full_name"`
 	Phone              string   `gorm:"phone" json:"phone"`
 	Email              string   `gorm:"email" json:"email"`
-	Password           string   `gorm:"password" json:"password"`
+	Password           string   `gorm:"password" json:"-"`
 	Role               RoleType `gorm:"role" json:"role"`
 	Address            string   `gorm:"address" json:"address"`
 	ProfileImageBase64 string   `gorm:"column:profileImageBase64" json:"profileImageBase64,omitempty"`
