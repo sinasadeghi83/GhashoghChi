@@ -11,18 +11,20 @@ type Response struct {
 }
 
 // RespondOK sends a successful JSON response.
-func RespondOK(c *gin.Context, data interface{}) {
+func RespondOK(c *gin.Context, msg string, data interface{}) {
 	c.JSON(200, Response{
-		Status: "success",
-		Data:   data,
+		Status:  "success",
+		Message: msg,
+		Data:    data,
 	})
 }
 
 // RespondCreated sends a successful creation JSON response.
-func RespondCreated(c *gin.Context, data interface{}) {
+func RespondCreated(c *gin.Context, msg string, data interface{}) {
 	c.JSON(201, Response{
-		Status: "success",
-		Data:   data,
+		Status:  "success",
+		Message: msg,
+		Data:    data,
 	})
 }
 

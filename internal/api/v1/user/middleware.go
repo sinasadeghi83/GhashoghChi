@@ -37,5 +37,4 @@ func (h Handler) CheckAuth(c *gin.Context) {
 	c.Set("currentUser", user)
 
 	c.Next()
-
 }

@@ -15,4 +15,5 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	rg.POST("/login", handler.Login)
 
 	rg.GET("/profile", handler.CheckAuth, handler.profile)
+	rg.PUT("/profile", handler.CheckAuth, handler.UpdProfile)
 }

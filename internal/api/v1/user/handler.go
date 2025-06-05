@@ -46,7 +46,7 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 
 	// fix
-	rest.RespondCreated(c, newUser2)
+	rest.RespondCreated(c, "user created successfully", newUser2)
 }
 
 func (h *Handler) Login(c *gin.Context) {
@@ -73,7 +73,7 @@ func (h *Handler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to generate token"})
 	}
 
-	rest.RespondCreated(c, gin.H{
+	rest.RespondCreated(c, "user logged in successfully", gin.H{
 		"token": token,
 		"user":  user,
 	})
@@ -89,5 +89,85 @@ func (h *Handler) profile(c *gin.Context) {
 		c.Header("WWW-Authenticate", "Bearer")
 		return
 	}
-	rest.RespondOK(c, user)
+	rest.RespondOK(c, "", user)
+}
+
+func (h *Handler) UpdProfile(c *gin.Context) {
+	user, exists := c.Get("currentUser")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Missing or invalid JWT token",
+		})
+		c.Header("WWW-Authenticate", "Bearer")
+		return
+	}
+
+	currentUser, ok := user.(*u.User)
+	if !ok {
+		rest.RespondError(c, http.StatusInternalServerError, "Invalid user data in context", nil)
+		return
+	}
+
+	var updateData RegisterInput
+	if err := c.ShouldBindJSON(&updateData); err != nil {
+		rest.RespondError(c, http.StatusBadRequest, "Invalid request payload", err)
+		return
+	}
+
+	updates := make(map[string]interface{})
+
+	if updateData.FullName != "" {
+		updates["full_name"] = updateData.FullName
+	}
+
+	if updateData.Phone != "" && updateData.Phone != currentUser.Phone {
+		if exists, err := h.Service.PhoneExists(updateData.Phone); err != nil {
+			rest.RespondError(c, http.StatusInternalServerError, "Error checking phone availability", err)
+			return
+		} else if exists {
+			rest.RespondError(c, http.StatusConflict, "Phone number already in use", nil)
+			return
+		}
+		updates["phone"] = updateData.Phone
+	}
+
+	if updateData.Email != "" && updateData.Email != currentUser.Email {
+		if exists, err := h.Service.EmailExists(updateData.Email); err != nil {
+			rest.RespondError(c, http.StatusInternalServerError, "Error checking email availability", err)
+			return
+		} else if exists {
+			rest.RespondError(c, http.StatusConflict, "Email already in use", nil)
+			return
+		}
+		updates["email"] = updateData.Email
+	}
+
+	if updateData.Password != "" {
+		hashedPassword, err := u.HashPassword(updateData.Password)
+		if err != nil {
+			rest.RespondError(c, http.StatusInternalServerError, "Failed to process password", err)
+			return
+		}
+		updates["password"] = hashedPassword
+	}
+
+	if updateData.Address != "" {
+		updates["address"] = updateData.Address
+	}
+
+	if updateData.ProfileImageBase64 != "" {
+		updates["profileImageBase64"] = updateData.ProfileImageBase64
+	}
+
+	if updateData.BankInfo != (u.BankInfo{}) {
+		updates["bank_info"] = updateData.BankInfo
+	}
+
+	if err := h.Service.Update(currentUser.ID, updates); err != nil {
+		rest.RespondError(c, http.StatusInternalServerError, "Failed to update profile", err)
+		return
+	}
+
+	rest.RespondOK(c, "profile updated successfully", nil)
 }

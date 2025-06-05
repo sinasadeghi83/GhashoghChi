@@ -13,8 +13,8 @@ const (
 type User struct {
 	gorm.Model
 	FullName           string   `gorm:"full_name" json:"full_name"`
-	Phone              string   `gorm:"phone" json:"phone"`
-	Email              string   `gorm:"email" json:"email"`
+	Phone              string   `gorm:"phone,unique" json:"phone"`
+	Email              string   `gorm:"email,unique" json:"email"`
 	Password           string   `gorm:"password" json:"-"`
 	Role               RoleType `gorm:"role" json:"role"`
 	Address            string   `gorm:"address" json:"address"`

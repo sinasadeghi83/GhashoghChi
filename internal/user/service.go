@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var errInvalidCredentials = errors.New("invalid credentials")
@@ -16,6 +15,9 @@ type UserService interface {
 	Register(user User) (*User, error)
 	Login(phone, password string) (*User, error)
 	Authorize(tokenString string) (*User, error)
+	PhoneExists(phone string) (bool, error)
+	EmailExists(email string) (bool, error)
+	Update(id uint, updates map[string]interface{}) error
 }
 
 type GormUserService struct {
@@ -28,7 +30,7 @@ func NewGormUserService(repo UserRepo) *GormUserService {
 
 func (s *GormUserService) Register(newUser User) (*User, error) {
 	var e error
-	newUser.Password, e = hashPassword(newUser.Password)
+	newUser.Password, e = HashPassword(newUser.Password)
 	if e != nil {
 		return nil, e
 	}
@@ -41,21 +43,11 @@ func (s *GormUserService) Login(phone, password string) (*User, error) {
 		return nil, errInvalidCredentials
 	}
 
-	if !verifyPassword(password, user.Password) {
+	if !VerifyPassword(password, user.Password) {
 		return nil, errInvalidCredentials
 	}
 
 	return user, nil
-}
-
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func verifyPassword(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
 }
 
 func (svc *GormUserService) Authorize(tokenString string) (*User, error) {
@@ -80,4 +72,46 @@ func (svc *GormUserService) Authorize(tokenString string) (*User, error) {
 	}
 
 	return svc.repo.FindById(uint(claims["id"].(float64)))
+}
+
+func (svc *GormUserService) PhoneExists(phone string) (bool, error) {
+	user, e := svc.repo.FindByPhone(phone)
+	return user != nil, e
+}
+
+func (svc *GormUserService) EmailExists(email string) (bool, error) {
+	user, e := svc.repo.FindByEmail(email)
+	return user != nil, e
+}
+
+func (svc *GormUserService) Update(id uint, updates map[string]interface{}) error {
+	user, err := svc.repo.FindById(id)
+	if err != nil {
+		return errInvalidCredentials
+	}
+	for field, value := range updates {
+		switch field {
+		case "full_name":
+			user.FullName = value.(string)
+
+		case "phone":
+			user.Phone = value.(string)
+
+		case "email":
+			user.Email = value.(string)
+
+		case "password":
+			user.Password = value.(string)
+
+		case "bank_info":
+			user.BankInfo = value.(BankInfo)
+
+		case "address":
+			user.Address = value.(string)
+
+		case "profileImageBase64":
+			user.ProfileImageBase64 = value.(string)
+		}
+	}
+	return svc.repo.Save(user)
 }
